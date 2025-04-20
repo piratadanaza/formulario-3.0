@@ -81,3 +81,19 @@ doc.save(doc_path)
 
 doc_path
 
+# Configuração rápida — se você já fez esse tipo de coisa antes ou	
+git@github.com:piratadanaza/formulario-3.0.git
+Comece criando um novo arquivo ou enviando um arquivo existente . Recomendamos que cada repositório inclua um README , uma LICENSE e um .gitignore .
+
+…ou crie um novo repositório na linha de comando
+echo "# formulario-3.0" >> README.md 
+git init 
+git add README.md 
+git commit -m "primeiro commit" 
+git branch -M main 
+git remote add origin git@github.com:piratadanaza/formulario-3.0.git
+ git push -u origin main
+…ou envie um repositório existente a partir da linha de comando
+git remoto adicionar origem git@github.com:piratadanaza/formulario-3.0.git
+ git branch -M main 
+git push -u origin main 
