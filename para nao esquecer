@@ -1,0 +1,33 @@
+# para rodar o banco de dados o servidor deve estar online na porta 3000
+# digite :
+#  node server.js
+
+# docker compose up -d
+
+# Isso inicia o container do PostgreSQL em segundo plano (modo detached)
+
+# Se for a primeira vez, ele cria a imagem, container, volume e banco.
+
+# Se já existia, ele só reinicia.
+
+# para conectar o banco de dados ao servidor na porta 5432:5432 
+
+#  POSTGRES_USER: postgres
+#  POSTGRES_PASSWORD: postgres
+#  POSTGRES_DB: formularioDB
+
+
+# docker stop $(docker ps -q)
+# Esse comando para qualquer container que esteja rodando, não só o PostgreSQL.
+
+
+# git@github.com:piratadanaza/meu-formulario-2.0.git
+
+
+
+#  DB_LOCAL #G@briel97
+#  DB_HOST localhost
+#  DB_PORT 5432
+#  DB_USER postgres
+#  DB_PASS postgres
+#  DB_NAME formularioDB
