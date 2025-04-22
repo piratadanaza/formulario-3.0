@@ -4,7 +4,7 @@ document.getElementById('formulario').addEventListener('submit', function (e) {
     const email = document.getElementById('email').value;
     const senha = document.getElementById('senha').value;
 
-    fetch('/salvar', {
+    fetch('http://localhost:3000/salvar', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
