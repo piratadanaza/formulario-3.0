@@ -9,13 +9,12 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-// Conexão com PostgreSQL
+// Conexão com PostgreSQL usando a connection string do Railway
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:RQnoOxMiQWlJzdtbEEDDsWOmGhuNHWvE@yamanote.proxy.rlwy.net:10004/railway';
+
 const pool = new Pool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
+    connectionString: connectionString,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
 // Função para criar a tabela se não existir
@@ -31,28 +30,41 @@ async function criarTabela() {
         `;
         await pool.query(query);
         console.log('Tabela verificada/criada com sucesso!');
+        
+        // Verificar se a tabela tem dados
+        const result = await pool.query('SELECT COUNT(*) FROM usuarios');
+        console.log(`Total de usuários na tabela: ${result.rows[0].count}`);
     } catch (err) {
         console.error('Erro ao criar tabela:', err);
     }
 }
 
 // Testar conexão e criar tabela
-pool.connect(async (err, client, release) => {
-    if (err) {
-        return console.error('Erro ao conectar no banco:', err.stack);
+async function iniciarConexao() {
+    try {
+        const client = await pool.connect();
+        console.log('Conectado ao PostgreSQL no Railway!');
+        
+        // Criar tabela se não existir
+        await criarTabela();
+        
+        client.release();
+    } catch (err) {
+        console.error('Erro ao conectar no banco:', err.stack);
     }
-    console.log('Conectado ao PostgreSQL');
+}
 
-    // Criar tabela se não existir
-    await criarTabela();
-
-    release();
-});
+// Iniciar conexão quando o servidor startar
+iniciarConexao();
 
 // Rota para salvar dados
 app.post('/salvar', async (req, res) => {
     console.log('Recebido:', req.body);
     const { email, senha } = req.body;
+
+    if (!email || !senha) {
+        return res.status(400).send('Email e senha são obrigatórios');
+    }
 
     try {
         await pool.query(
@@ -62,7 +74,11 @@ app.post('/salvar', async (req, res) => {
         res.send('Dados salvos com sucesso!');
     } catch (err) {
         console.error('Erro ao inserir:', err);
-        res.status(500).send('Erro ao salvar no banco');
+        if (err.code === '23505') { // Código de erro para unique violation
+            res.status(400).send('Email já cadastrado');
+        } else {
+            res.status(500).send('Erro ao salvar no banco');
+        }
     }
 });
 
@@ -95,7 +111,18 @@ app.delete('/usuarios/:id', async (req, res) => {
     }
 });
 
+// Rota de health check
+app.get('/health', async (req, res) => {
+    try {
+        await pool.query('SELECT 1');
+        res.json({ status: 'OK', database: 'Conectado' });
+    } catch (err) {
+        res.status(500).json({ status: 'ERROR', database: 'Desconectado' });
+    }
+});
+
 // Iniciar servidor
-app.listen(3000, () => {
-    console.log('Servidor rodando em http://localhost:3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
