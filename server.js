@@ -18,12 +18,34 @@ const pool = new Pool({
     database: process.env.DB_NAME,
 });
 
-// Testar conexão
-pool.connect((err, client, release) => {
+// Função para criar a tabela se não existir
+async function criarTabela() {
+    try {
+        const query = `
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id SERIAL PRIMARY KEY,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                senha VARCHAR(255) NOT NULL,
+                data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `;
+        await pool.query(query);
+        console.log('Tabela verificada/criada com sucesso!');
+    } catch (err) {
+        console.error('Erro ao criar tabela:', err);
+    }
+}
+
+// Testar conexão e criar tabela
+pool.connect(async (err, client, release) => {
     if (err) {
         return console.error('Erro ao conectar no banco:', err.stack);
     }
     console.log('Conectado ao PostgreSQL');
+
+    // Criar tabela se não existir
+    await criarTabela();
+
     release();
 });
 
@@ -47,7 +69,7 @@ app.post('/salvar', async (req, res) => {
 // Listar usuários
 app.get('/usuarios', async (req, res) => {
     try {
-        const result = await pool.query('SELECT id, email FROM usuarios ORDER BY id ASC');
+        const result = await pool.query('SELECT id, email, data_criacao FROM usuarios ORDER BY id ASC');
         res.json(result.rows);
     } catch (err) {
         console.error('Erro ao buscar usuários:', err);
@@ -72,8 +94,6 @@ app.delete('/usuarios/:id', async (req, res) => {
         res.status(500).send('Erro ao excluir do banco');
     }
 });
-
-
 
 // Iniciar servidor
 app.listen(3000, () => {
